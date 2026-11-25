@@ -1,0 +1,6 @@
+*.bia
+*.zip
+*.csv
+*.tsv
+*.xml
+.DS_Store

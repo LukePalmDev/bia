@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="color-scheme" content="light"><title>Misure · Diario personale</title>
+<style>
+:root{--ink:#262827;--soft:#595f60;--faint:#6d7476;--line:#dedfdd;--paper:#fff;--canvas:#f3f3f2;--accent:#84a6ac}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--ink);font:300 16px/1.45 "Helvetica Neue",-apple-system,BlinkMacSystemFont,Arial,sans-serif;-webkit-font-smoothing:antialiased}button,select,input,summary{font:inherit;color:inherit}button,select,summary{cursor:pointer}button{border:0;background:none;padding:0}button:focus-visible,summary:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid #668b92;outline-offset:3px}button:disabled{opacity:.38;cursor:default}h1,h2,h3,p{margin:0}h1,h2,h3{font-weight:450}h1{font-size:23px;letter-spacing:-.045em}h2{font-size:20px;letter-spacing:-.035em}h3{font-size:16px}small{font-size:12px}header{height:72px;padding:0 clamp(20px,4vw,74px);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:16px;background:white;position:sticky;top:0;z-index:3}.mark{width:27px;height:27px;stroke:#5b6666;fill:none;stroke-width:1.35}.headDivider{height:20px;border-left:1px solid var(--line)}.views{display:flex;margin-left:auto;align-self:stretch;gap:24px}.views button{border-bottom:2px solid transparent;color:var(--faint);font-size:14px}.views button[aria-pressed=true]{color:var(--ink);border-color:#6e8789;font-weight:500}#opts{font-size:14px;display:flex;align-items:center;gap:8px}#opts i{font-style:normal;letter-spacing:1px}.tools{border-bottom:1px solid var(--line);background:#fafafa;padding:17px max(5vw,calc((100vw - 1120px)/2));display:flex;align-items:end;flex-wrap:wrap;gap:13px}.tools label{font-size:12px;display:grid;gap:4px;color:var(--soft)}input,select{border:1px solid #d4d7d5;border-radius:3px;min-height:35px;padding:5px 9px;background:white;max-width:100%;font-size:14px}.periods{display:flex;align-items:center;flex-wrap:wrap;gap:3px}.periods button,.subtle{font-size:14px;padding:7px 9px}.periods button[aria-pressed=true]{background:#e6ebeb;color:#324c50}.tools .subtle{text-decoration:underline;text-underline-offset:4px}.range{display:flex;gap:8px;align-items:end;flex-wrap:wrap}.stage{max-width:1216px;margin:0 auto;padding:40px clamp(20px,3vw,50px) 65px;display:grid;grid-template-columns:155px minmax(0,1fr);column-gap:clamp(26px,5vw,86px)}.rail{align-self:start;position:sticky;top:98px;max-height:calc(100vh - 126px);overflow:auto;scrollbar-width:thin;padding:8px 0}.rail button{display:block;text-align:left}.year{font-size:17px;font-weight:460;margin:0 0 12px}.months{padding:0 0 15px}.month{color:var(--faint);font-size:14px;padding:3px 0 3px 12px;border-left:1.5px solid transparent}.month.current{color:#263738;border-color:var(--accent);font-weight:500}.month:hover,.year:hover,.subtle:hover{text-decoration:underline;text-underline-offset:3px}.stage>section{min-width:0}.context{margin:0 0 20px;color:var(--faint);font-size:13px}.monthBlock{margin:0 0 34px}.monthBlock h2{margin:0 0 13px 13px}.entry{background:white;border-bottom:1px solid #e7e8e6}.entry summary{padding:16px 21px;display:grid;grid-template-columns:1fr 1.1fr 1.1fr .74fr minmax(110px,1fr) 9px;gap:10px;align-items:center;list-style:none;font-variant-numeric:tabular-nums;transition:background .12s}.entry summary::-webkit-details-marker{display:none}.entry summary:hover,.entry[open] summary{background:#f8f9f8}.label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);display:block}.val{font-size:19px;letter-spacing:-.038em;font-weight:400}.val small{font-size:14px;color:var(--soft)}.date{font-size:14px;text-align:right;color:#555c5c}.date small{display:block;color:var(--faint);line-height:1.5}.chev{width:7px;height:7px;border:solid #9aabaa;border-width:1.2px 1.2px 0 0;transform:rotate(45deg)}.entry[open] .chev{transform:rotate(135deg)}.details{padding:15px 22px 20px;border-top:1px solid #eee;font-size:14px}.details dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin:12px 0 0}.details dt{color:var(--faint);font-size:12px}.details dd{margin:1px 0}.empty,.note,.stats,.legend{font-size:14px;color:var(--soft)}.empty{padding:36px 18px;background:white}.other summary{grid-template-columns:1.3fr 1fr .7fr 1fr 9px}.pager{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:14px 0;font-size:13px;color:var(--soft)}.pager button{margin-left:15px;font-size:14px}.panel{padding:25px;background:var(--paper);margin-bottom:16px}.plot{position:relative;min-height:230px}.plot svg{width:100%;height:270px}.tip{position:absolute;white-space:pre-line;background:#353d3e;color:#fff;font-size:13px;padding:7px 10px;pointer-events:none;border-radius:3px}.legend{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.dot{width:7px;height:7px;display:inline-block;border-radius:50%;margin-right:5px}.stats,.note{margin-top:10px}.trendStats{margin-top:20px;border-top:1px solid var(--line);padding-top:16px;display:flex;gap:28px;flex-wrap:wrap}.trendStats strong{font-weight:400;font-size:18px}.sourceinfo{margin-top:35px;border-top:1px solid var(--line);padding-top:13px;color:var(--soft);font-size:13px}.sourceinfo summary{display:list-item;width:fit-content}.sourceinfo p{margin-top:8px}.mobileMonth{display:none}.textBtn{font-size:14px;text-decoration:underline;text-underline-offset:4px}#loading{padding:32px}[hidden]{display:none!important}
+@media(max-width:850px){.stage{grid-template-columns:105px minmax(0,1fr);column-gap:15px;padding-left:20px;padding-right:20px}.entry summary{padding:13px 14px;gap:7px}.date{font-size:13px}.val{font-size:17px}}
+@media(max-width:650px){header{height:57px;gap:8px;padding:0 13px}.mark{width:22px}.views{gap:12px}.views button,#opts{font-size:13px}.headDivider{display:none}h1{font-size:20px}.stage{display:block;padding:18px 12px 45px}.rail{display:none}.mobileMonth{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--soft);margin-bottom:14px}.entry summary{position:relative;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:12px}.entry .date{grid-column:1/5;text-align:left;display:flex;align-items:center;gap:8px}.chev{position:absolute;right:15px;bottom:18px}.monthBlock h2{margin-left:3px}.label{font-size:10px}.val{font-size:16px}.other summary{grid-template-columns:repeat(3,minmax(0,1fr))}.other .date{grid-column:1/4}.panel{padding:15px}.tools{padding:14px}.tools label{max-width:100%}.plot svg{height:230px}.monthBlock{margin-bottom:22px}.context{margin-bottom:10px}}
+
+@media(max-width:650px){
+  html{-webkit-text-size-adjust:100%}
+  header{height:auto;min-height:58px;padding:5px max(12px,env(safe-area-inset-right)) 5px max(12px,env(safe-area-inset-left))}
+  header h1{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}header .mark{flex:none;width:20px}
+  .views{gap:4px;flex:none}.views button,#opts{min-height:44px;padding:0 5px}
+  #opts{gap:3px;flex:none}.tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch}
+  .tools .periods,.tools .range{grid-column:1/-1}.tools select,.tools input,.mobileMonth select{font-size:16px;min-height:44px;width:100%;min-width:0}
+  .periods button,.subtle,.pager button,.textBtn{min-height:44px}.stage{padding-bottom:calc(36px + env(safe-area-inset-bottom))}
+  .entry summary{min-height:72px;column-gap:6px}.entry summary>span{min-width:0;overflow-wrap:anywhere}
+  .label{font-size:10px;letter-spacing:.045em}.date{padding-right:18px}.entry .date{flex-wrap:wrap}
+  .mobileMonth select{width:auto;max-width:75%}.trendStats{gap:15px}.trendStats p{flex-basis:100%}
+  .details dl{grid-template-columns:repeat(2,minmax(0,1fr));overflow-wrap:anywhere}.plot{touch-action:pan-y}
+}
+@media(max-width:360px){header .mark{display:none}.views{gap:0}.entry summary{padding-inline:9px}.label{font-size:9.5px}.tools{padding-inline:9px}}
+</style></head><body>
+<header><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><path d="M2 15h6l4-9 5 16 3-9 2 2h4"/></svg><h1 id="title">Peso</h1><nav class="views" aria-label="Vista"><button id="listTab" aria-pressed="true">Registro</button><button id="trendTab" aria-pressed="false">Andamento</button></nav><span class="headDivider"></span><button id="opts" aria-expanded="false" aria-controls="options"><i>···</i> Opzioni</button></header>
+<div id="loading" role="status">Apertura dell’archivio…</div>
+<form id="loader" class="panel" style="max-width:420px;margin:10vh auto;padding:28px" hidden>
+<h2>Apri il tuo archivio</h2><p class="note">Seleziona il file .bia da File o iCloud Drive. I dati vengono letti sul dispositivo.</p>
+<label class="textBtn" style="display:block;margin-top:16px">Archivio personale<input type="file" id="dataFile" style="display:block;max-width:100%;margin-top:7px" accept=".bia,.gz,application/gzip,application/octet-stream"></label>
+<p class="note" role="status" id="fileError"></p></form><div id="app" hidden><div id="options" class="tools" hidden>
+<label>Categoria<select id="group"></select></label><label>Misura<select id="metric"></select></label><label>Archivio<select id="brand"></select></label><label id="originWrap" hidden>Origine Apple<select id="origin"></select></label><div class="periods" id="periods" aria-label="Periodo"></div><div class="range" id="range" hidden><label>Dal<input type="date" id="from"></label><label>Al<input type="date" id="until"></label><span id="rangeMsg" role="status"></span></div><button id="export" class="subtle">Scarica CSV</button></div>
+<main class="stage"><nav class="rail" id="rail" aria-label="Indice cronologico"></nav><section><p class="context" id="context"></p><label class="mobileMonth">Mese<select id="monthSelect"></select></label>
+<div id="trend" hidden><div class="panel"><h2 id="chartTitle"></h2><p class="note" id="chartSub"></p><div class="plot" id="plot"></div><div class="legend" id="legend"></div><p class="stats" id="stats"></p><div id="extrema" class="trendStats"></div></div></div>
+<div id="journal"><div id="records"></div><div id="pager" class="pager"><span id="pages"></span><div><button id="prev">Precedenti</button><button id="next">Successive</button></div></div></div>
+<details class="sourceinfo"><summary>Fonti e criteri di lettura</summary><p id="sourceText"></p><p>I dati associati a una pesata provengono dalla stessa origine e dalla stessa data e ora esportate. Per mywellness è disponibile solo il giorno. Un trattino indica un dato assente o ambiguo. I possibili riscontri tra archivi usano data e peso arrotondato al centesimo. Le registrazioni sono conservate singolarmente.</p></details></section></main></div>
+
+<script>
+'use strict';
+const $=id=>document.getElementById(id),fmt=(v,d=2)=>new Intl.NumberFormat('it-IT',{maximumFractionDigits:d}).format(v),safe=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),colors=['#647579','#a2998c','#839fa9'],dot=c=>'<i class="dot" style="background:'+c+'"></i>';
+let D,M,selected,span=0,filtered=[],end='',begin='',allMetrics=[],graphPoints=[],cross=new Map();
+const iso=d=>d.slice(0,10),dayNum=d=>Date.parse(iso(d)+'T00:00:00Z'),shownDate=(d,clock=false)=>{const s=iso(d).split('-').reverse().join('/');return clock&&d.length>10?s+' · '+d.slice(11,19):s};
+function opts(el,rows,v){el.replaceChildren(...rows.map(([k,n])=>new Option(n,k)));el.value=String(v);if(el.selectedIndex<0)el.selectedIndex=0}
+function chooseOrigin(r){const [brand]=D.origins[r[2]];return ($('brand').value==='all'||+ $('brand').value===brand)&&($('originWrap').hidden||$('origin').value==='all'||r[2]===+$('origin').value)}
+function fit(r){return (!begin||iso(r[0])>=begin)&&(!end||iso(r[0])<=end)&&chooseOrigin(r)}
+function setMetricList(prefer){const g=$('group').value;const a=allMetrics.filter(i=>M[i].group===g);opts($('metric'),a.map(i=>[i,M[i].name+(M[i].unit?' ('+M[i].unit+')':'')+(a.some(j=>i!==j&&M[j].name===M[i].name&&M[j].unit===M[i].unit)?' · '+M[i].mode:'')]),a.includes(prefer)?prefer:a[0]);selected=+$('metric').value}
+let newest=[], months=[], start=0, expandedYear='', trendMode=false, zoomMonth='';
+const chunk=36, related=new Map();
+const monthName=new Intl.DateTimeFormat('it-IT',{month:'long',timeZone:'UTC'});
+function monthLabel(key,year=true){
+  const m=monthName.format(new Date(key+'-01T00:00:00Z'));
+  return m[0].toUpperCase()+m.slice(1)+(year?' '+key.slice(0,4):'');
+}
+function originName(row){const [b,n]=D.origins[row[2]];return D.brands[b]+(b===2?' · '+n:'')}
+function indexDetails(){
+  for(const m of M){
+    if(!['Corpo','Bioimpedenza','Cuore'].includes(m.group)||m.mode!=='Singole misure')continue;
+    for(const r of m.r){
+      const k=r[2]+'|'+r[0];
+      if(!related.has(k))related.set(k,[]);
+      related.get(k).push({m,r});
+    }
+  }
+}
+function readOne(values,name,unit){
+  const found=values.filter(v=>v.m.name===name&&v.m.unit===unit);
+  return found.length&&found.every(v=>v.r[1]===found[0].r[1])?found[0].r[1]:null;
+}
+function cell(label,val,unit='',digits=2){
+  return '<span><span class="label">'+safe(label)+'</span><span class="val">'+(val==null?'—':safe(typeof val==='number'?fmt(val,digits):val)+(unit?' <small>'+safe(unit)+'</small>':''))+'</span></span>';
+}
+function record(r){
+  const m=M[selected], weight=m.name==='Peso',values=related.get(r[2]+'|'+r[0])||[], day=shownDate(r[0]),clock=r[0].length>10?r[0].slice(11,16):'';
+  const author=originName(r),brand=D.brands[D.origins[r[2]][0]];
+  let s=cell(weight?'Peso':'Valore',r[1],m.unit);
+  if(weight)s+=cell('Massa grassa',readOne(values,'Massa grassa','%'),'%')+cell('Massa magra',readOne(values,'Massa magra','kg'),'kg')+cell('BMI',readOne(values,'BMI',''),'',1);
+  else s+=cell('Archivio',brand)+cell('Campioni',r[3]);
+  const matched=weight&&cross.get(r);
+  return '<details class="entry'+(weight?'':' other')+'"><summary>'+s+'<span class="date">'+day+(clock?' · '+clock:'')+'<small>'+safe(weight?brand:D.origins[r[2]][1])+'</small></span><i class="chev" aria-hidden="true"></i></summary><div class="details"><p>'+safe(author)+' · '+safe(r[0])+'</p>'+(matched?'<p class="note">Possibile riscontro: '+safe(matched)+'</p>':'')+'<dl><div><dt>'+safe(m.name)+'</dt><dd>'+fmt(r[1],6)+' '+safe(m.unit)+'</dd></div>'+(weight?values.filter(v=>v.m!==m).map(({m,r})=>'<div><dt>'+safe(m.name)+'</dt><dd>'+fmt(r[1],5)+' '+safe(m.unit)+'</dd></div>').join(''):'<div><dt>Aggregazione</dt><dd>'+safe(m.mode)+'</dd></div>')+'</dl></div></details>';
+}
+function renderNav(){
+  const current=trendMode?zoomMonth:(newest[start]?.[0].slice(0,7)||'');
+  const years=[...new Set(months.map(k=>k.slice(0,4)))];
+  $('rail').innerHTML=years.map(y=>'<button class="year" data-year="'+y+'" aria-expanded="'+(expandedYear===y)+'">'+y+'</button>'+(expandedYear===y?'<div class="months">'+months.filter(k=>k.startsWith(y)).map(k=>'<button class="month'+(k===current?' current':'')+'" data-month="'+k+'">'+monthLabel(k,false)+'</button>').join('')+'</div>':'')).join('');
+  opts($('monthSelect'),[...(trendMode?[['','Intero periodo']]:[]),...months.map(k=>[k,monthLabel(k)])],current);
+  $('monthSelect').parentElement.hidden=!months.length;
+}
+function jumpMonth(k){
+  if(trendMode) {zoomMonth=k;drawTrend()}
+  else {start=Math.max(0,newest.findIndex(r=>r[0].startsWith(k)));drawList()}
+  expandedYear=k.slice(0,4)||months[0]?.slice(0,4)||'';renderNav();window.scrollTo(0,0);
+}
+function drawList(){
+  let key='',html='';
+  for(const r of newest.slice(start,start+chunk)){
+    const month=r[0].slice(0,7);
+    if(month!==key){if(key)html+='</section>';html+='<section class="monthBlock"><h2>'+monthLabel(month)+'</h2>';key=month}
+    html+=record(r);
+  }
+  $('records').innerHTML=html?html+'</section>':'<p class="empty">Nessuna misura per i filtri scelti.</p>';
+  $('pages').textContent=newest.length?(start+1)+'–'+Math.min(start+chunk,newest.length)+' di '+fmt(newest.length,0):'';
+  $('pager').hidden=newest.length<=chunk;$('prev').disabled=start===0;$('next').disabled=start+chunk>=newest.length;
+}
+function drawTrend(){
+  const m=M[selected],rows=zoomMonth?filtered.filter(r=>r[0].startsWith(zoomMonth)):filtered;
+  $('chartTitle').textContent=m.name+(m.unit?' ('+m.unit+')':'');
+  $('chartSub').textContent=[m.mode,rows.length?shownDate(rows[0][0])+' – '+shownDate(rows.at(-1)[0]):''].filter(Boolean).join(' · ');
+  plot(rows);
+  $('extrema').innerHTML='';
+  if(rows.length){
+    const last=rows.at(-1),series=rows.filter(r=>r[2]===last[2]),vals=series.map(r=>r[1]),unit=safe(m.unit);
+    $('extrema').innerHTML=[['Ultimo',last[1]],['Minimo',Math.min(...vals)],['Massimo',Math.max(...vals)],['Variazione',series.length>1?last[1]-series[0][1]:null]].map(([k,v])=>'<div><span class="label">'+k+'</span><strong>'+(v===null?'—':fmt(v)+' '+unit)+'</strong></div>').join('')+'<p class="note">Origine: '+safe(originName(last))+'</p>';
+  }
+  if(zoomMonth){let b=document.createElement('button');b.className='textBtn';b.textContent='Intero periodo';b.onclick=()=>jumpMonth('');$('extrema').appendChild(b)}
+}
+function view(trend){
+  trendMode=trend;$('trend').hidden=!trend;$('journal').hidden=trend;
+  $('listTab').setAttribute('aria-pressed',!trend);$('trendTab').setAttribute('aria-pressed',trend);
+  if(trend)drawTrend();else drawList();
+  renderNav();
+}
+function render(){
+  const m=M[selected],a=m.r.filter(chooseOrigin);
+  end=a.length?iso(a.at(-1)[0]):'';
+  begin=end&&span>0?new Date(dayNum(end)-(span-1)*864e5).toISOString().slice(0,10):'';
+  if(span===-1){begin=$('from').value;end=$('until').value}
+  $('range').hidden=span!==-1;
+  $('rangeMsg').textContent=span===-1&&begin&&end&&begin>end?'Controlla l’ordine delle date.':'';
+  filtered=a.filter(fit);newest=filtered.slice().reverse();months=[...new Set(newest.map(r=>r[0].slice(0,7)))];
+  expandedYear=months[0]?.slice(0,4)||'';start=0;zoomMonth='';
+  $('periods').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.days===span));
+  $('title').textContent=m.name;
+  $('context').textContent=[$('brand').selectedOptions[0].textContent,$('originWrap').hidden||$('origin').value==='all'?'':$('origin').selectedOptions[0].textContent,fmt(newest.length,0)+' registrazioni',span===0?'':span===-1?'Periodo personalizzato':span+' giorni'].filter(Boolean).join(' · ');
+  $('export').disabled=!filtered.length;view(trendMode);
+}
+function bindMinimal(){
+  indexDetails();$('listTab').onclick=()=>view(false);$('trendTab').onclick=()=>view(true);
+  $('opts').onclick=()=>{const p=$('options');p.hidden=!p.hidden;$('opts').setAttribute('aria-expanded',!p.hidden)};
+  $('rail').onclick=e=>{if(e.target.dataset.month)jumpMonth(e.target.dataset.month);if(e.target.dataset.year){const y=e.target.dataset.year;expandedYear=expandedYear===y?'':y;renderNav()}};
+  $('monthSelect').onchange=e=>jumpMonth(e.target.value);
+  function move(step){start=Math.max(0,start+step);expandedYear=newest[start][0].slice(0,4);drawList();renderNav();window.scrollTo(0,0)}
+  $('prev').onclick=()=>move(-chunk);$('next').onclick=()=>move(chunk);
+  const c=D.counts;$('sourceText').textContent='Withings: '+c.withingsWeight+' pesate. Technogym: '+c.technogymWeight+' pesate e '+c.technogymBiometrics+' misure. Apple Salute: '+c.appleWeight+' pesate; le serie frequenti sono riepilogate per origine e giorno.';
+  $('app').hidden=false;$('loading').hidden=true;render();
+  let timer;window.addEventListener('resize',()=>{clearTimeout(timer);if(trendMode)timer=setTimeout(drawTrend,120)});
+}
+function plot(a){const el=$('plot'),m=M[selected];graphPoints=[];if(!a.length){el.innerHTML='<div class="empty">Nessuna registrazione per questa selezione.</div>';$('legend').innerHTML='';$('stats').textContent='';return}const W=Math.max(270,Math.floor(el.getBoundingClientRect().width)),H=W<420?230:270,L=W<420?44:56,R=14,T=17,B=32;let lo=Infinity,hi=-Infinity;const by=new Map();for(const r of a){lo=Math.min(lo,r[1]);hi=Math.max(hi,r[1]);if(!by.has(r[2]))by.set(r[2],[]);by.get(r[2]).push(r)}const pad=(hi-lo)*.09||Math.max(.25,Math.abs(hi)*.02);lo-=pad;hi+=pad;const stamp=r=>dayNum(r[0])+((Number(r[0].slice(11,13))||0)*3600+(Number(r[0].slice(14,16))||0)*60+(Number(r[0].slice(17,19))||0))*1000;let t0=stamp(a[0]),t1=stamp(a.at(-1));if(t1===t0){t0-=432e5;t1+=432e5}const x=r=>L+(stamp(r)-t0)/(t1-t0)*(W-L-R),y=v=>T+(hi-v)/(hi-lo)*(H-T-B);let svg='<svg role="img" aria-label="'+safe(m.name)+' per origine" viewBox="0 0 '+W+' '+H+'">';for(let k=0;k<5;k++){const v=lo+k*(hi-lo)/4,Y=y(v);svg+='<path d="M'+L+' '+Y+'H'+(W-R)+'" stroke="#dfe2e2" stroke-dasharray="3 4"/><text x="'+(L-8)+'" y="'+(Y+4)+'" text-anchor="end" fill="#697172" font-size="11">'+fmt(v,Math.abs(hi-lo)<2?2:1)+'</text>'}const ticks=W<420?3:5;for(let j=0;j<ticks;j++){let t=t0+(t1-t0)*j/(ticks-1);const label=new Intl.DateTimeFormat('it-IT',{month:'short',...(t1-t0>365*864e5?{year:'2-digit'}:{day:'numeric'}),timeZone:'UTC'}).format(new Date(t));svg+='<text x="'+(L+(W-L-R)*j/(ticks-1))+'" y="'+(H-8)+'" text-anchor="'+(j===0?'start':j===ticks-1?'end':'middle')+'" font-size="11" fill="#697172">'+label+'</text>'}
+let legend=[];const bs=[...new Set(a.map(r=>D.origins[r[2]][0]))],one=bs.length===1;const hues=['#688b94','#978575','#737c81','#9a93a0','#77958b','#847c70','#86919f','#9a8585'];let ix=0;
+for(const [id,rs] of by){const b=D.origins[id][0],c=one&&by.size>1?hues[ix++%hues.length]:colors[b];if(one)legend.push([D.origins[id][1],c]);let coords=rs.map(r=>[x(r),y(r[1])]);svg+='<path d="'+coords.map(([X,Y],i)=>(i?'L':'M')+X.toFixed(2)+' '+Y.toFixed(2)).join('')+'" fill="none" stroke="'+c+'" opacity="'+(one?.78:.58)+'" stroke-width="1.6"/>';for(let i=0;i<rs.length;i++){const [X,Y]=coords[i];graphPoints.push([X,Y,rs[i]]);if(rs.length<700)svg+='<circle cx="'+X.toFixed(2)+'" cy="'+Y.toFixed(2)+'" r="'+(rs.length>80?2.2:3.3)+'" fill="'+c+'"/>'}}
+if(!one)legend=bs.map(b=>[D.brands[b],colors[b]]);el.innerHTML=svg+'</svg><div class="tip" hidden></div>';const tip=el.lastChild;el.onpointermove=e=>{const box=el.firstChild.getBoundingClientRect(),X=(e.clientX-box.left)*W/box.width,Y=(e.clientY-box.top)*H/box.height;let best=null,min=900;for(const p of graphPoints){const v=(X-p[0])**2+(Y-p[1])**2;if(v<min){best=p;min=v}}if(!best){tip.hidden=true;return}const r=best[2];tip.textContent=shownDate(r[0],true)+'\n'+fmt(r[1])+' '+m.unit+' · '+D.origins[r[2]][1];tip.hidden=false;tip.style.left=Math.max(0,Math.min(box.width-tip.offsetWidth,best[0]+8))+'px';tip.style.top=Math.max(0,best[1]-50)+'px'};el.onpointerleave=()=>tip.hidden=true;$('legend').innerHTML=legend.map(([l,c])=>'<span>'+dot(c)+safe(l)+'</span>').join('');$('stats').textContent=fmt(a.length,0)+' valori visualizzati · '+fmt(a.reduce((s,r)=>s+r[3],0),0)+' registrazioni di origine'}
+function compareWeights(){const w=M.find(m=>m.name==='Peso'&&m.unit==='kg').r;for(const r of w){const own=D.origins[r[2]][0],others=new Set();for(const s of w){const b=D.origins[s[2]][0];if(b!==own&&iso(s[0])===iso(r[0])&&Math.round(s[1]*100)===Math.round(r[1]*100))others.add(D.brands[b])}cross.set(r,[...others].join(', '))}}
+function csvDownload(){let m=M[selected],esc=t=>'"'+String(t).replaceAll('"','""')+'"';const lines=[['Data e ora originale','Misura','Valore','Unità','Archivio','Origine','Campioni','Aggregazione',...(m.name==='Peso'?['Altri archivi con data e peso compatibili']:[])],...filtered.map(r=>[r[0],m.name,String(r[1]).replace('.',','),m.unit,D.brands[D.origins[r[2]][0]],D.origins[r[2]][1],r[3],m.mode,...(m.name==='Peso'?[cross.get(r)||'']:[])])];const url=URL.createObjectURL(new Blob(['\uFEFF'+lines.map(a=>a.map(esc).join(';')).join('\r\n')],{type:'text/csv;charset=utf-8'}));const link=document.createElement('a');link.href=url;link.download=m.name.replace(/[^\p{L}\p{N}]+/gu,'-')+'.csv';link.click();setTimeout(()=>URL.revokeObjectURL(url),2000)}
+async function boot(blob){D=await new Response(blob.stream().pipeThrough(new DecompressionStream('gzip'))).json();M=D.metrics;compareWeights();allMetrics=M.map((_,i)=>i).sort((i,j)=>M[i].name.localeCompare(M[j].name,'it'));opts($('brand'),[['all','Tutte le fonti'],...D.brands.map((s,i)=>[i,s])],'all');opts($('origin'),[['all','Tutte le origini'],...D.origins.map((s,i)=>[i,s]).filter(v=>v[1][0]===2).map(v=>[v[0],v[1][1]]).sort((a,b)=>a[1].localeCompare(b[1]))],'all');opts($('group'),[...new Set(M.map(m=>m.group))].map(s=>[s,s]),'Corpo');setMetricList(M.findIndex(m=>m.name==='Peso'&&m.unit==='kg'));$('periods').innerHTML=[[30,'30 g'],[90,'90 g'],[365,'1 anno'],[0,'Tutto'],[-1,'Date…']].map(([n,t])=>'<button data-days="'+n+'">'+t+'</button>').join('');$('periods').onclick=e=>{if(!e.target.dataset.days)return;if(+e.target.dataset.days===-1&&span!==-1&&!$('from').value){$('from').value=begin||iso(filtered[0]?.[0]||'');$('until').value=end}span=+e.target.dataset.days;render()};$('brand').onchange=()=>{$('originWrap').hidden=$('brand').value!=='2';$('origin').value='all';render()};$('origin').onchange=()=>{render()};$('group').onchange=()=>{setMetricList();render()};$('metric').onchange=()=>{selected=+$('metric').value;render()};for(const id of ['from','until'])$(id).onchange=()=>{render()};$('export').onclick=csvDownload;bindMinimal()}
+async function launch(){
+  $('loading').hidden=true;
+  $('loader').hidden=false;
+  $('opts').disabled=$('trendTab').disabled=$('listTab').disabled=true;
+  $('dataFile').onchange=async e=>{
+    const file=e.target.files[0];if(!file)return;
+    try{await boot(file);$('loader').hidden=true;$('opts').disabled=$('trendTab').disabled=$('listTab').disabled=false}
+    catch{$('fileError').textContent='Archivio non riconosciuto. Seleziona il file .bia della dashboard.'}
+  };
+}
+launch();
+</script></body></html>

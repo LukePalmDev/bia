@@ -28,16 +28,15 @@
 <main class="stage"><nav class="rail" id="rail" aria-label="Indice cronologico"></nav><section><p class="context" id="context"></p><label class="mobileMonth">Mese<select id="monthSelect"></select></label>
 <div id="trend" hidden><div class="panel"><h2 id="chartTitle"></h2><p class="note" id="chartSub"></p><div class="plot" id="plot"></div><div class="legend" id="legend"></div><p class="stats" id="stats"></p><div id="extrema" class="trendStats"></div></div></div>
 <div id="journal"><div id="records"></div><div id="pager" class="pager"><span id="pages"></span><div><button id="prev">Precedenti</button><button id="next">Successive</button></div></div></div>
-<details class="sourceinfo"><summary>Fonti e criteri di lettura</summary><p id="sourceText"></p><p>I dati associati a una pesata provengono dalla stessa origine e dalla stessa data e ora esportate. Per mywellness è disponibile solo il giorno. Un trattino indica un dato assente o ambiguo. I possibili riscontri tra archivi usano data e peso arrotondato al centesimo. Le registrazioni sono conservate singolarmente.</p></details></section></main></div>
+<details class="sourceinfo"><summary>Fonti e criteri di lettura</summary><p id="sourceText"></p><p>I dati associati a una pesata provengono dalla stessa origine e dalla stessa data e ora esportate. Per mywellness è disponibile solo il giorno. Un trattino indica un dato assente o ambiguo. Ogni giornata riporta la media delle pesate selezionate, nel fuso orario italiano. Ogni valore usa le sole pesate in cui è disponibile. Le copie con lo stesso orario e peso compatibile contano una volta. Una misura mywellness priva di orario viene abbinata solo se esiste un unico riscontro della stessa origine.</p></details></section></main></div>
 
 <script>
 'use strict';
 const $=id=>document.getElementById(id),fmt=(v,d=2)=>new Intl.NumberFormat('it-IT',{maximumFractionDigits:d}).format(v),safe=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),colors=['#647579','#a2998c','#839fa9'],dot=c=>'<i class="dot" style="background:'+c+'"></i>';
-let D,M,selected,span=0,filtered=[],end='',begin='',allMetrics=[],graphPoints=[],cross=new Map();
+let D,M,selected,span=0,filtered=[],end='',begin='',allMetrics=[],graphPoints=[];
 const iso=d=>d.slice(0,10),dayNum=d=>Date.parse(iso(d)+'T00:00:00Z'),shownDate=(d,clock=false)=>{const s=iso(d).split('-').reverse().join('/');return clock&&d.length>10?s+' · '+d.slice(11,19):s};
 function opts(el,rows,v){el.replaceChildren(...rows.map(([k,n])=>new Option(n,k)));el.value=String(v);if(el.selectedIndex<0)el.selectedIndex=0}
 function chooseOrigin(r){const [brand]=D.origins[r[2]];return ($('brand').value==='all'||+ $('brand').value===brand)&&($('originWrap').hidden||$('origin').value==='all'||r[2]===+$('origin').value)}
-function fit(r){return (!begin||iso(r[0])>=begin)&&(!end||iso(r[0])<=end)&&chooseOrigin(r)}
 function setMetricList(prefer){const g=$('group').value;const a=allMetrics.filter(i=>M[i].group===g);opts($('metric'),a.map(i=>[i,M[i].name+(M[i].unit?' ('+M[i].unit+')':'')+(a.some(j=>i!==j&&M[j].name===M[i].name&&M[j].unit===M[i].unit)?' · '+M[i].mode:'')]),a.includes(prefer)?prefer:a[0]);selected=+$('metric').value}
 let newest=[], months=[], start=0, expandedYear='', trendMode=false, zoomMonth='';
 const chunk=36, related=new Map();
@@ -64,14 +63,87 @@ function readOne(values,name,unit){
 function cell(label,val,unit='',digits=2){
   return '<span><span class="label">'+safe(label)+'</span><span class="val">'+(val==null?'—':safe(typeof val==='number'?fmt(val,digits):val)+(unit?' <small>'+safe(unit)+'</small>':''))+'</span></span>';
 }
+const romeClock=new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Rome',dateStyle:'short',timeStyle:'medium',hourCycle:'h23'});
+function weighingTime(stamp){
+  if(!/[+-]\d{4}$/.test(stamp))return stamp;
+  const instant=stamp.slice(0,19).replace(' ','T')+stamp.slice(-5,-2)+':'+stamp.slice(-2);
+  return romeClock.format(new Date(instant)).replace(',','');
+}
+function dailyWeights(rows,weightMetric){
+  const eventsByTime=new Map(),undated=[];
+  for(const row of rows){
+    const stamp=weighingTime(row[0]);
+    if(stamp.length===10){undated.push(row);continue}
+    if(!eventsByTime.has(stamp))eventsByTime.set(stamp,[]);
+    const events=eventsByTime.get(stamp);
+    const match=events.find(e=>Math.abs(e.rows[0][1]-row[1])<=0.00501 &&
+      e.rows.every(r=>r[2]!==row[2]||r[1]===row[1]));
+    if(match)match.rows.push(row);
+    else events.push({day:iso(stamp),rows:[row]});
+  }
+  const events=[...eventsByTime.values()].flat();
+  for(const row of undated){
+    const [brand,name]=D.origins[row[2]];
+    const matches=events.filter(e=>e.day===row[0] && e.rows.some(r=>{
+      const [other,origin]=D.origins[r[2]];
+      return other===2 && brand!==other && name.toLowerCase()===origin.toLowerCase() && Math.abs(r[1]-row[1])<=0.00501;
+    }) && !e.rows.some(r=>r[2]===row[2]));
+    if(matches.length===1)matches[0].rows.push(row);
+    else events.push({day:row[0],rows:[row]});
+  }
+  const days=new Map();
+  for(const event of events){
+    if(!days.has(event.day))days.set(event.day,{metrics:new Map(),sources:new Set(),count:0});
+    const day=days.get(event.day);
+    day.count++;
+    // The Withings mirror in Apple Health retains additional decimal places.
+    const priority=r=>{
+      const [brand,name]=D.origins[r[2]];
+      if(brand===2 && name==='Withings')return 0;
+      return brand===2?2:1;
+    };
+    const values=new Map();
+    for(const row of event.rows.sort((a,b)=>priority(a)-priority(b))){
+      day.sources.add(D.brands[D.origins[row[2]][0]]);
+      if(!values.has(weightMetric))values.set(weightMetric,row[1]);
+      const entries=related.get(row[2]+'|'+row[0])||[];
+      for(const {m} of entries){
+        if(values.has(m))continue;
+        const value=readOne(entries,m.name,m.unit);
+        if(value!==null)values.set(m,value);
+      }
+    }
+    for(const [metric,value] of values){
+      if(!day.metrics.has(metric))day.metrics.set(metric,{sum:0,n:0});
+      const total=day.metrics.get(metric);
+      total.sum+=value;total.n++;
+    }
+  }
+  return [...days.keys()].sort().map(date=>{
+    const day=days.get(date),averages=new Map();
+    for(const [m,{sum,n}] of day.metrics)averages.set(m,{mean:sum/n,n});
+    const row=[date,averages.get(weightMetric).mean,null,day.count];
+    row.averages=averages;row.sources=[...day.sources].join(', ');
+    return row;
+  });
+}
+function dailyRecord(r){
+  const average=(name,unit)=>r.averages.get(M.find(m=>m.name===name && m.unit===unit))?.mean;
+  const summary=cell('Peso',r[1],'kg')+cell('Massa grassa',average('Massa grassa','%'),'%')+
+    cell('Massa magra',average('Massa magra','kg'),'kg')+cell('BMI',average('BMI',''),'',1);
+  const count=r[3]===1?'1 pesata':r[3]+' pesate';
+  const details=[...r.averages].map(([m,{mean,n}])=>
+    '<div><dt>'+safe(m.name)+'</dt><dd>'+fmt(mean)+' '+safe(m.unit)+
+    (n<r[3]?' <small>('+n+' su '+r[3]+')</small>':'')+'</dd></div>').join('');
+  return '<details class="entry"><summary>'+summary+'<span class="date">'+shownDate(r[0])+
+    '<small>'+count+'</small></span><i class="chev" aria-hidden="true"></i></summary><div class="details"><p>Media giornaliera · '+
+    safe(r.sources)+'</p><dl>'+details+'</dl></div></details>';
+}
 function record(r){
-  const m=M[selected], weight=m.name==='Peso',values=related.get(r[2]+'|'+r[0])||[], day=shownDate(r[0]),clock=r[0].length>10?r[0].slice(11,16):'';
-  const author=originName(r),brand=D.brands[D.origins[r[2]][0]];
-  let s=cell(weight?'Peso':'Valore',r[1],m.unit);
-  if(weight)s+=cell('Massa grassa',readOne(values,'Massa grassa','%'),'%')+cell('Massa magra',readOne(values,'Massa magra','kg'),'kg')+cell('BMI',readOne(values,'BMI',''),'',1);
-  else s+=cell('Archivio',brand)+cell('Campioni',r[3]);
-  const matched=weight&&cross.get(r);
-  return '<details class="entry'+(weight?'':' other')+'"><summary>'+s+'<span class="date">'+day+(clock?' · '+clock:'')+'<small>'+safe(weight?brand:D.origins[r[2]][1])+'</small></span><i class="chev" aria-hidden="true"></i></summary><div class="details"><p>'+safe(author)+' · '+safe(r[0])+'</p>'+(matched?'<p class="note">Possibile riscontro: '+safe(matched)+'</p>':'')+'<dl><div><dt>'+safe(m.name)+'</dt><dd>'+fmt(r[1],6)+' '+safe(m.unit)+'</dd></div>'+(weight?values.filter(v=>v.m!==m).map(({m,r})=>'<div><dt>'+safe(m.name)+'</dt><dd>'+fmt(r[1],5)+' '+safe(m.unit)+'</dd></div>').join(''):'<div><dt>Aggregazione</dt><dd>'+safe(m.mode)+'</dd></div>')+'</dl></div></details>';
+  if(r.averages)return dailyRecord(r);
+  const m=M[selected],brand=D.brands[D.origins[r[2]][0]];
+  const cells=cell('Valore',r[1],m.unit)+cell('Archivio',brand)+cell('Campioni',r[3]);
+  return '<details class="entry other"><summary>'+cells+'<span class="date">'+shownDate(r[0],true)+'<small>'+safe(D.origins[r[2]][1])+'</small></span><i class="chev" aria-hidden="true"></i></summary><div class="details"><p>'+safe(originName(r))+' · '+safe(r[0])+'</p><dl><div><dt>'+safe(m.name)+'</dt><dd>'+fmt(r[1],6)+' '+safe(m.unit)+'</dd></div><div><dt>Aggregazione</dt><dd>'+safe(m.mode)+'</dd></div></dl></div></details>';
 }
 function renderNav(){
   const current=trendMode?zoomMonth:(newest[start]?.[0].slice(0,7)||'');
@@ -99,12 +171,12 @@ function drawList(){
 function drawTrend(){
   const m=M[selected],rows=zoomMonth?filtered.filter(r=>r[0].startsWith(zoomMonth)):filtered;
   $('chartTitle').textContent=m.name+(m.unit?' ('+m.unit+')':'');
-  $('chartSub').textContent=[m.mode,rows.length?shownDate(rows[0][0])+' – '+shownDate(rows.at(-1)[0]):''].filter(Boolean).join(' · ');
+  $('chartSub').textContent=[m.name==='Peso'?'Medie giornaliere':m.mode,rows.length?shownDate(rows[0][0])+' – '+shownDate(rows.at(-1)[0]):''].filter(Boolean).join(' · ');
   plot(rows);
   $('extrema').innerHTML='';
   if(rows.length){
     const last=rows.at(-1),series=rows.filter(r=>r[2]===last[2]),vals=series.map(r=>r[1]),unit=safe(m.unit);
-    $('extrema').innerHTML=[['Ultimo',last[1]],['Minimo',Math.min(...vals)],['Massimo',Math.max(...vals)],['Variazione',series.length>1?last[1]-series[0][1]:null]].map(([k,v])=>'<div><span class="label">'+k+'</span><strong>'+(v===null?'—':fmt(v)+' '+unit)+'</strong></div>').join('')+'<p class="note">Origine: '+safe(originName(last))+'</p>';
+    $('extrema').innerHTML=[['Ultimo',last[1]],['Minimo',Math.min(...vals)],['Massimo',Math.max(...vals)],['Variazione',series.length>1?last[1]-series[0][1]:null]].map(([k,v])=>'<div><span class="label">'+k+'</span><strong>'+(v===null?'—':fmt(v)+' '+unit)+'</strong></div>').join('')+(last.averages?'':'<p class="note">Origine: '+safe(originName(last))+'</p>');
   }
   if(zoomMonth){let b=document.createElement('button');b.className='textBtn';b.textContent='Intero periodo';b.onclick=()=>jumpMonth('');$('extrema').appendChild(b)}
 }
@@ -116,16 +188,17 @@ function view(trend){
 }
 function render(){
   const m=M[selected],a=m.r.filter(chooseOrigin);
-  end=a.length?iso(a.at(-1)[0]):'';
+  const dated=m.name==='Peso'?dailyWeights(a,m):a;
+  end=dated.length?iso(dated.at(-1)[0]):'';
   begin=end&&span>0?new Date(dayNum(end)-(span-1)*864e5).toISOString().slice(0,10):'';
   if(span===-1){begin=$('from').value;end=$('until').value}
   $('range').hidden=span!==-1;
   $('rangeMsg').textContent=span===-1&&begin&&end&&begin>end?'Controlla l’ordine delle date.':'';
-  filtered=a.filter(fit);newest=filtered.slice().reverse();months=[...new Set(newest.map(r=>r[0].slice(0,7)))];
+  filtered=dated.filter(r=>(!begin||iso(r[0])>=begin)&&(!end||iso(r[0])<=end));newest=filtered.slice().reverse();months=[...new Set(newest.map(r=>r[0].slice(0,7)))];
   expandedYear=months[0]?.slice(0,4)||'';start=0;zoomMonth='';
   $('periods').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.days===span));
   $('title').textContent=m.name;
-  $('context').textContent=[$('brand').selectedOptions[0].textContent,$('originWrap').hidden||$('origin').value==='all'?'':$('origin').selectedOptions[0].textContent,fmt(newest.length,0)+' registrazioni',span===0?'':span===-1?'Periodo personalizzato':span+' giorni'].filter(Boolean).join(' · ');
+  $('context').textContent=[$('brand').selectedOptions[0].textContent,$('originWrap').hidden||$('origin').value==='all'?'':$('origin').selectedOptions[0].textContent,fmt(newest.length,0)+(m.name==='Peso'?(newest.length===1?' giorno':' giorni di pesata'):' registrazioni'),span===0?'':span===-1?'Periodo personalizzato':span+' giorni'].filter(Boolean).join(' · ');
   $('export').disabled=!filtered.length;view(trendMode);
 }
 function bindMinimal(){
@@ -140,16 +213,28 @@ function bindMinimal(){
   let timer;window.addEventListener('resize',()=>{clearTimeout(timer);if(trendMode)timer=setTimeout(drawTrend,120)});
 }
 function plot(a){const el=$('plot'),m=M[selected];graphPoints=[];if(!a.length){el.innerHTML='<div class="empty">Nessuna registrazione per questa selezione.</div>';$('legend').innerHTML='';$('stats').textContent='';return}const W=Math.max(270,Math.floor(el.getBoundingClientRect().width)),H=W<420?230:270,L=W<420?44:56,R=14,T=17,B=32;let lo=Infinity,hi=-Infinity;const by=new Map();for(const r of a){lo=Math.min(lo,r[1]);hi=Math.max(hi,r[1]);if(!by.has(r[2]))by.set(r[2],[]);by.get(r[2]).push(r)}const pad=(hi-lo)*.09||Math.max(.25,Math.abs(hi)*.02);lo-=pad;hi+=pad;const stamp=r=>dayNum(r[0])+((Number(r[0].slice(11,13))||0)*3600+(Number(r[0].slice(14,16))||0)*60+(Number(r[0].slice(17,19))||0))*1000;let t0=stamp(a[0]),t1=stamp(a.at(-1));if(t1===t0){t0-=432e5;t1+=432e5}const x=r=>L+(stamp(r)-t0)/(t1-t0)*(W-L-R),y=v=>T+(hi-v)/(hi-lo)*(H-T-B);let svg='<svg role="img" aria-label="'+safe(m.name)+' per origine" viewBox="0 0 '+W+' '+H+'">';for(let k=0;k<5;k++){const v=lo+k*(hi-lo)/4,Y=y(v);svg+='<path d="M'+L+' '+Y+'H'+(W-R)+'" stroke="#dfe2e2" stroke-dasharray="3 4"/><text x="'+(L-8)+'" y="'+(Y+4)+'" text-anchor="end" fill="#697172" font-size="11">'+fmt(v,Math.abs(hi-lo)<2?2:1)+'</text>'}const ticks=W<420?3:5;for(let j=0;j<ticks;j++){let t=t0+(t1-t0)*j/(ticks-1);const label=new Intl.DateTimeFormat('it-IT',{month:'short',...(t1-t0>365*864e5?{year:'2-digit'}:{day:'numeric'}),timeZone:'UTC'}).format(new Date(t));svg+='<text x="'+(L+(W-L-R)*j/(ticks-1))+'" y="'+(H-8)+'" text-anchor="'+(j===0?'start':j===ticks-1?'end':'middle')+'" font-size="11" fill="#697172">'+label+'</text>'}
-let legend=[];const bs=[...new Set(a.map(r=>D.origins[r[2]][0]))],one=bs.length===1;const hues=['#688b94','#978575','#737c81','#9a93a0','#77958b','#847c70','#86919f','#9a8585'];let ix=0;
-for(const [id,rs] of by){const b=D.origins[id][0],c=one&&by.size>1?hues[ix++%hues.length]:colors[b];if(one)legend.push([D.origins[id][1],c]);let coords=rs.map(r=>[x(r),y(r[1])]);svg+='<path d="'+coords.map(([X,Y],i)=>(i?'L':'M')+X.toFixed(2)+' '+Y.toFixed(2)).join('')+'" fill="none" stroke="'+c+'" opacity="'+(one?.78:.58)+'" stroke-width="1.6"/>';for(let i=0;i<rs.length;i++){const [X,Y]=coords[i];graphPoints.push([X,Y,rs[i]]);if(rs.length<700)svg+='<circle cx="'+X.toFixed(2)+'" cy="'+Y.toFixed(2)+'" r="'+(rs.length>80?2.2:3.3)+'" fill="'+c+'"/>'}}
-if(!one)legend=bs.map(b=>[D.brands[b],colors[b]]);el.innerHTML=svg+'</svg><div class="tip" hidden></div>';const tip=el.lastChild;el.onpointermove=e=>{const box=el.firstChild.getBoundingClientRect(),X=(e.clientX-box.left)*W/box.width,Y=(e.clientY-box.top)*H/box.height;let best=null,min=900;for(const p of graphPoints){const v=(X-p[0])**2+(Y-p[1])**2;if(v<min){best=p;min=v}}if(!best){tip.hidden=true;return}const r=best[2];tip.textContent=shownDate(r[0],true)+'\n'+fmt(r[1])+' '+m.unit+' · '+D.origins[r[2]][1];tip.hidden=false;tip.style.left=Math.max(0,Math.min(box.width-tip.offsetWidth,best[0]+8))+'px';tip.style.top=Math.max(0,best[1]-50)+'px'};el.onpointerleave=()=>tip.hidden=true;$('legend').innerHTML=legend.map(([l,c])=>'<span>'+dot(c)+safe(l)+'</span>').join('');$('stats').textContent=fmt(a.length,0)+' valori visualizzati · '+fmt(a.reduce((s,r)=>s+r[3],0),0)+' registrazioni di origine'}
-function compareWeights(){const w=M.find(m=>m.name==='Peso'&&m.unit==='kg').r;for(const r of w){const own=D.origins[r[2]][0],others=new Set();for(const s of w){const b=D.origins[s[2]][0];if(b!==own&&iso(s[0])===iso(r[0])&&Math.round(s[1]*100)===Math.round(r[1]*100))others.add(D.brands[b])}cross.set(r,[...others].join(', '))}}
-function csvDownload(){let m=M[selected],esc=t=>'"'+String(t).replaceAll('"','""')+'"';const lines=[['Data e ora originale','Misura','Valore','Unità','Archivio','Origine','Campioni','Aggregazione',...(m.name==='Peso'?['Altri archivi con data e peso compatibili']:[])],...filtered.map(r=>[r[0],m.name,String(r[1]).replace('.',','),m.unit,D.brands[D.origins[r[2]][0]],D.origins[r[2]][1],r[3],m.mode,...(m.name==='Peso'?[cross.get(r)||'']:[])])];const url=URL.createObjectURL(new Blob(['\uFEFF'+lines.map(a=>a.map(esc).join(';')).join('\r\n')],{type:'text/csv;charset=utf-8'}));const link=document.createElement('a');link.href=url;link.download=m.name.replace(/[^\p{L}\p{N}]+/gu,'-')+'.csv';link.click();setTimeout(()=>URL.revokeObjectURL(url),2000)}
+let legend=[];const bs=[...new Set(a.map(r=>r.averages?null:D.origins[r[2]][0]))],one=bs.length===1;const hues=['#688b94','#978575','#737c81','#9a93a0','#77958b','#847c70','#86919f','#9a8585'];let ix=0;
+for(const [id,rs] of by){const b=id===null?0:D.origins[id][0],c=one&&by.size>1?hues[ix++%hues.length]:colors[b];if(one)legend.push([id===null?'Media giornaliera':D.origins[id][1],c]);let coords=rs.map(r=>[x(r),y(r[1])]);svg+='<path d="'+coords.map(([X,Y],i)=>(i?'L':'M')+X.toFixed(2)+' '+Y.toFixed(2)).join('')+'" fill="none" stroke="'+c+'" opacity="'+(one?.78:.58)+'" stroke-width="1.6"/>';for(let i=0;i<rs.length;i++){const [X,Y]=coords[i];graphPoints.push([X,Y,rs[i]]);if(rs.length<700)svg+='<circle cx="'+X.toFixed(2)+'" cy="'+Y.toFixed(2)+'" r="'+(rs.length>80?2.2:3.3)+'" fill="'+c+'"/>'}}
+if(!one)legend=bs.map(b=>[D.brands[b],colors[b]]);el.innerHTML=svg+'</svg><div class="tip" hidden></div>';const tip=el.lastChild;el.onpointermove=e=>{const box=el.firstChild.getBoundingClientRect(),X=(e.clientX-box.left)*W/box.width,Y=(e.clientY-box.top)*H/box.height;let best=null,min=900;for(const p of graphPoints){const v=(X-p[0])**2+(Y-p[1])**2;if(v<min){best=p;min=v}}if(!best){tip.hidden=true;return}const r=best[2];tip.textContent=shownDate(r[0],true)+'\n'+fmt(r[1])+' '+m.unit+' · '+(r.averages?'Media giornaliera':D.origins[r[2]][1]);tip.hidden=false;tip.style.left=Math.max(0,Math.min(box.width-tip.offsetWidth,best[0]+8))+'px';tip.style.top=Math.max(0,best[1]-50)+'px'};el.onpointerleave=()=>tip.hidden=true;$('legend').innerHTML=legend.map(([l,c])=>'<span>'+dot(c)+safe(l)+'</span>').join('');$('stats').textContent=fmt(a.length,0)+' valori visualizzati · '+fmt(a.reduce((s,r)=>s+r[3],0),0)+(a[0].averages?' pesate':' registrazioni di origine')}
+function csvDownload(){
+  const m=M[selected],esc=t=>'"'+String(t).replaceAll('"','""')+'"';
+  let lines;
+  if(m.name==='Peso'){
+    const metrics=M.filter(metric=>filtered.some(r=>r.averages.has(metric)));
+    lines=[['Data','Pesate','Fonti',...metrics.map(metric=>metric.name+(metric.unit?' ('+metric.unit+')':''))],
+      ...filtered.map(r=>[r[0],r[3],r.sources,...metrics.map(metric=>{
+        const v=r.averages.get(metric);return v?String(+v.mean.toFixed(6)).replace('.',','):'';
+      })])];
+  }else{
+    lines=[['Data e ora originale','Misura','Valore','Unità','Archivio','Origine','Campioni','Aggregazione'],
+      ...filtered.map(r=>[r[0],m.name,String(r[1]).replace('.',','),m.unit,D.brands[D.origins[r[2]][0]],D.origins[r[2]][1],r[3],m.mode])];
+  }
+  const url=URL.createObjectURL(new Blob(['\uFEFF'+lines.map(a=>a.map(esc).join(';')).join('\r\n')],{type:'text/csv;charset=utf-8'}));const link=document.createElement('a');link.href=url;link.download=m.name.replace(/[^\p{L}\p{N}]+/gu,'-')+'.csv';link.click();setTimeout(()=>URL.revokeObjectURL(url),2000)}
 async function boot(){
   const response=await fetch('./misurazioni.json');
   if(!response.ok)throw new Error('Archivio delle pesate non disponibile');
   D=await response.json();
-  M=D.metrics;compareWeights();allMetrics=M.map((_,i)=>i).sort((i,j)=>M[i].name.localeCompare(M[j].name,'it'));opts($('brand'),[['all','Tutte le fonti'],...D.brands.map((s,i)=>[i,s])],'all');opts($('origin'),[['all','Tutte le origini'],...D.origins.map((s,i)=>[i,s]).filter(v=>v[1][0]===2).map(v=>[v[0],v[1][1]]).sort((a,b)=>a[1].localeCompare(b[1]))],'all');opts($('group'),[...new Set(M.map(m=>m.group))].map(s=>[s,s]),'Corpo');setMetricList(M.findIndex(m=>m.name==='Peso'&&m.unit==='kg'));$('periods').innerHTML=[[30,'30 g'],[90,'90 g'],[365,'1 anno'],[0,'Tutto'],[-1,'Date…']].map(([n,t])=>'<button data-days="'+n+'">'+t+'</button>').join('');$('periods').onclick=e=>{if(!e.target.dataset.days)return;if(+e.target.dataset.days===-1&&span!==-1&&!$('from').value){$('from').value=begin||iso(filtered[0]?.[0]||'');$('until').value=end}span=+e.target.dataset.days;render()};$('brand').onchange=()=>{$('originWrap').hidden=$('brand').value!=='2';$('origin').value='all';render()};$('origin').onchange=()=>{render()};$('group').onchange=()=>{setMetricList();render()};$('metric').onchange=()=>{selected=+$('metric').value;render()};for(const id of ['from','until'])$(id).onchange=()=>{render()};$('export').onclick=csvDownload;bindMinimal()}
+  M=D.metrics;allMetrics=M.map((_,i)=>i).sort((i,j)=>M[i].name.localeCompare(M[j].name,'it'));opts($('brand'),[['all','Tutte le fonti'],...D.brands.map((s,i)=>[i,s])],'all');opts($('origin'),[['all','Tutte le origini'],...D.origins.map((s,i)=>[i,s]).filter(v=>v[1][0]===2).map(v=>[v[0],v[1][1]]).sort((a,b)=>a[1].localeCompare(b[1]))],'all');opts($('group'),[...new Set(M.map(m=>m.group))].map(s=>[s,s]),'Corpo');setMetricList(M.findIndex(m=>m.name==='Peso'&&m.unit==='kg'));$('periods').innerHTML=[[30,'30 g'],[90,'90 g'],[365,'1 anno'],[0,'Tutto'],[-1,'Date…']].map(([n,t])=>'<button data-days="'+n+'">'+t+'</button>').join('');$('periods').onclick=e=>{if(!e.target.dataset.days)return;if(+e.target.dataset.days===-1&&span!==-1&&!$('from').value){$('from').value=begin||iso(filtered[0]?.[0]||'');$('until').value=end}span=+e.target.dataset.days;render()};$('brand').onchange=()=>{$('originWrap').hidden=$('brand').value!=='2';$('origin').value='all';render()};$('origin').onchange=()=>{render()};$('group').onchange=()=>{setMetricList();render()};$('metric').onchange=()=>{selected=+$('metric').value;render()};for(const id of ['from','until'])$(id).onchange=()=>{render()};$('export').onclick=csvDownload;bindMinimal()}
 boot().catch(()=>{
   $('loading').textContent='Impossibile caricare le misurazioni. Ricarica la pagina per riprovare.';
 });

@@ -138,7 +138,7 @@ function bindMinimal(){
   $('monthSelect').onchange=e=>jumpMonth(e.target.value);
   function move(step){start=Math.max(0,start+step);expandedYear=newest[start][0].slice(0,4);drawList();renderNav();window.scrollTo(0,0)}
   $('prev').onclick=()=>move(-chunk);$('next').onclick=()=>move(chunk);
-  const c=D.counts;$('sourceText').textContent='Withings: '+c.withingsWeight+' pesate. Technogym: '+c.technogymWeight+' pesate e '+c.technogymBiometrics+' misure. Apple Salute: '+c.appleWeight+' pesate; le serie frequenti sono riepilogate per origine e giorno.';
+  const c=D.counts;$('sourceText').textContent='Withings: '+c.withingsWeight+' pesate. Technogym: '+c.technogymWeight+' pesate e '+c.technogymBiometrics+' misure. Apple Salute: '+c.appleWeight+' pesate. Il battito è riportato solo quando coincide con la data e l’ora di una pesata della stessa fonte.';
   $('app').hidden=false;$('loading').hidden=true;render();
   let timer;window.addEventListener('resize',()=>{clearTimeout(timer);if(trendMode)timer=setTimeout(drawTrend,120)});
 }
